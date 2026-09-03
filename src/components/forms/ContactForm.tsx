@@ -184,7 +184,7 @@ export function ContactForm() {
 
       {status === 'error' && (
         <p className="text-xs text-red-600 font-black">
-          Failed to send inquiry. Please call us directly at +91 9160342240.
+          Failed to send inquiry. Please call us directly at +91 8533888883.
         </p>
       )}
 

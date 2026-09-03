@@ -4,9 +4,9 @@ export const SITE_CONFIG = {
   subheading: 'Precision engineered rooftop solar solutions with Tier-1 technology & UPNEDA certified excellence.',
   description:
     'Lianasolar delivers turnkey EPC solar solutions with Tier-1 technology, precision engineering, guaranteed net metering, and hassle-free government subsidy support across India.',
-  phone: '+91 9160342240',
-  secondaryPhone: '+91 9550001418',
-  whatsappNumber: '919160342240',
+  phone: '+91 8533888883',
+  secondaryPhone: '+91 8533888883',
+  whatsappNumber: '918533888883',
   email: 'contact@lianasolar.com',
   salesEmail: 'sales@lianasolar.com',
   address: 'Lianasolar Corporate Office, Sector 62, Noida, NCR 201309',

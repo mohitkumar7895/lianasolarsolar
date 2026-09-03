@@ -10,9 +10,9 @@ import { FinalCTA } from '@/components/sections/FinalCTA';
 export default function ContactPage() {
   const { config } = useSiteContent();
 
-  const primaryPhone = config.phone || '+91 9160342240';
-  const secondaryPhone = '+91 9550001418';
-  const whatsappNumber = config.whatsappNumber || '919160342240';
+  const primaryPhone = config.phone || '+91 8533888883';
+  const secondaryPhone = '+91 8533888883';
+  const whatsappNumber = config.whatsappNumber || '918533888883';
 
   return (
     <div className="bg-white min-h-screen py-10 sm:py-16 space-y-16">

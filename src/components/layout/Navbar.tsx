@@ -26,8 +26,8 @@ export function Navbar() {
     { name: 'CONTACT', href: '/contact' },
   ];
 
-  const primaryPhone = config.phone || '+91 9160342240';
-  const secondaryPhone = '+91 9550001418';
+  const primaryPhone = config.phone || '+91 8533888883';
+  const secondaryPhone = '+91 8533888883';
 
   return (
     <header className="w-full bg-white z-40 relative shadow-sm">
@@ -49,7 +49,7 @@ export function Navbar() {
             </a>
 
             <a
-              href={`https://wa.me/${config.whatsappNumber || '919160342240'}`}
+              href={`https://wa.me/${config.whatsappNumber || '918533888883'}`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"

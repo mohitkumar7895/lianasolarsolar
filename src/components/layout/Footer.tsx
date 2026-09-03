@@ -17,8 +17,8 @@ export function Footer() {
     return null;
   }
 
-  const primaryPhone = config.phone || '+91 9160342240';
-  const secondaryPhone = '+91 9550001418';
+  const primaryPhone = config.phone || '+91 8533888883';
+  const secondaryPhone = '+91 8533888883';
 
   return (
     <footer className="bg-slate-50 text-slate-600 border-t border-slate-200/90 pt-8 sm:pt-10 pb-6 sm:pb-8">

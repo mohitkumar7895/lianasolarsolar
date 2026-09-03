@@ -4,10 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  SunMedium,
-  ArrowRight,
   ShieldCheck,
-  UserCheck,
+  ArrowRight,
   Eye,
   EyeOff,
   AlertCircle,
@@ -15,20 +13,16 @@ import {
   Loader2,
   Lock,
   ArrowLeft,
-  Database,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/Button';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<'customer' | 'admin'>('admin'); // Defaults to Admin as requested
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -41,27 +35,19 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await login(email, password, role);
+      const res = await login(email, password, 'admin');
 
       if (!res.success) {
-        setErrorMessage(res.message || 'Authentication failed. Please verify your credentials.');
+        setErrorMessage(res.message || 'Invalid administrator credentials.');
         setLoading(false);
         return;
       }
 
-      setSuccessMessage(
-        res.role === 'admin'
-          ? 'Admin authorization granted. Launching CMS Control Center...'
-          : 'Customer authentication successful. Opening Solar Dashboard...'
-      );
+      setSuccessMessage('Admin authorization granted. Launching CMS Control Center...');
 
       setTimeout(() => {
-        if (res.role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/customer');
-        }
-      }, 600);
+        router.push('/admin');
+      }, 500);
     } catch (err: any) {
       setErrorMessage(err.message || 'Server connection error.');
       setLoading(false);
@@ -80,7 +66,7 @@ export default function LoginPage() {
           href="/"
           className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors bg-slate-900/80 px-3.5 py-2 rounded-xl border border-slate-800 backdrop-blur-md"
         >
-          <ArrowLeft className="w-4 h-4 text-[#f97316]" /> Back to Liana Solar Website
+          <ArrowLeft className="w-4 h-4 text-[#f97316]" /> Back to Lianasolar Website
         </Link>
 
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
@@ -90,64 +76,26 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Main Login Card */}
+      {/* Main Admin Login Card */}
       <div className="w-full max-w-md mx-auto my-auto z-10 pt-4 pb-8">
         <div className="bg-[#161b22]/90 backdrop-blur-xl p-7 sm:p-9 rounded-3xl border border-slate-800/80 shadow-2xl shadow-black/80 space-y-6">
           {/* Header */}
           <div className="text-center space-y-2.5">
             <div className="inline-flex items-center justify-center p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-orange-500/30 text-[#f97316] shadow-inner">
-              {role === 'admin' ? (
-                <ShieldCheck className="w-8 h-8 text-[#f97316]" />
-              ) : (
-                <SunMedium className="w-8 h-8 text-[#f97316]" />
-              )}
+              <ShieldCheck className="w-8 h-8 text-[#f97316]" />
             </div>
 
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase tracking-widest text-[#f97316] bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20 inline-block">
-                LIANA SOLAR ENTERPRISE
+                LIANASOLAR ENTERPRISE
               </span>
               <h1 className="text-2xl font-black tracking-tight text-white">
-                {role === 'admin' ? 'Admin Control Center' : 'Customer Portal Login'}
+                Admin Control Center
               </h1>
               <p className="text-xs text-slate-400 font-medium">
-                {role === 'admin'
-                  ? 'Sign in with your administrator credentials to manage CMS & Leads'
-                  : 'Sign in to access your solar plant telemetry and power bills'}
+                Sign in with your administrator credentials to manage CMS, Call Queries & Leads
               </p>
             </div>
-          </div>
-
-          {/* Role Toggle Switcher */}
-          <div className="grid grid-cols-2 gap-2 p-1.5 bg-[#0d1117] rounded-2xl border border-slate-800">
-            <button
-              type="button"
-              onClick={() => {
-                setRole('admin');
-                setErrorMessage(null);
-              }}
-              className={`py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                role === 'admin'
-                  ? 'bg-[#f97316] text-white shadow-lg shadow-orange-950 font-black'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4" /> Admin Portal
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setRole('customer');
-                setErrorMessage(null);
-              }}
-              className={`py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                role === 'customer'
-                  ? 'bg-[#f97316] text-white shadow-lg shadow-orange-950 font-black'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <UserCheck className="w-4 h-4" /> Customer Portal
-            </button>
           </div>
 
           {/* Error Banner */}
@@ -170,11 +118,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5 text-left">
               <label className="block text-xs font-black uppercase tracking-wider text-slate-300">
-                Email Address
+                Admin Email Address
               </label>
               <input
                 type="email"
-                placeholder={role === 'admin' ? 'admin@lianasolar.com' : 'user@example.com'}
+                placeholder="admin@lianasolar.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -183,14 +131,9 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-1.5 text-left">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-300">
-                  Password
-                </label>
-                <span className="text-[11px] text-[#f97316] hover:underline cursor-pointer">
-                  Forgot?
-                </span>
-              </div>
+              <label className="block text-xs font-black uppercase tracking-wider text-slate-300">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -203,7 +146,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -231,35 +174,21 @@ export default function LoginPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Authenticating...
+                  <Loader2 className="w-4 h-4 animate-spin" /> Authenticating Admin...
                 </>
               ) : (
                 <>
-                  Sign In to {role === 'admin' ? 'Admin Control' : 'Customer Account'}{' '}
-                  <ArrowRight className="w-4 h-4" />
+                  Sign In to Admin Control <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
-
-          {/* Footer inside card */}
-          <div className="pt-4 border-t border-slate-800/80 text-center text-xs text-slate-400 space-y-2">
-            <div>
-              Need to create a new profile?{' '}
-              <Link
-                href={`/register?role=${role}`}
-                className="font-bold text-[#f97316] hover:underline"
-              >
-                Register {role === 'admin' ? 'Admin' : 'Customer'} Account
-              </Link>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Footer Bottom */}
       <div className="w-full max-w-5xl mx-auto text-center text-[11px] text-slate-500 z-10">
-        © {new Date().getFullYear()} Liana Solar Power Systems. Secured Enterprise Authentication.
+        © {new Date().getFullYear()} Lianasolar Power Systems. Secured Administrator Portal.
       </div>
     </div>
   );
