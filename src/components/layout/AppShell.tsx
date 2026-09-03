@@ -7,6 +7,7 @@ import { Footer } from './Footer';
 import { WhatsAppButton } from '@/components/common/WhatsAppButton';
 import { ScrollToTop } from '@/components/common/ScrollToTop';
 import { QuoteModal } from '@/components/common/QuoteModal';
+import { CallQueryModal } from '@/components/common/CallQueryModal';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function AppShell({ children }: AppShellProps) {
       <WhatsAppButton />
       <ScrollToTop />
       <QuoteModal />
+      <CallQueryModal />
     </div>
   );
 }

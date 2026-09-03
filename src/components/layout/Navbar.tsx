@@ -14,7 +14,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { config } = useSiteContent();
-  const { openQuoteModal } = useModal();
+  const { openQuoteModal, openCallQueryModal } = useModal();
 
   const NAV_ITEMS = [
     { name: 'HOME', href: '/' },
@@ -138,8 +138,16 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* GET FREE QUOTE BUTTON ONLY */}
+          {/* CALL QUERY & GET FREE QUOTE BUTTONS */}
           <div className="hidden md:flex items-center gap-2 pl-2 py-1.5">
+            <button
+              onClick={openCallQueryModal}
+              className="px-3 lg:px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs uppercase tracking-wider shadow-xs hover:text-white transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 border border-slate-700"
+              title="Request an instant callback from our solar engineer"
+            >
+              <Phone className="w-3.5 h-3.5 text-[#f97316]" /> CALL QUERY
+            </button>
+
             <button
               onClick={openQuoteModal}
               className="px-4 lg:px-5 py-2 rounded-xl bg-gradient-to-r from-[#f97316] to-amber-500 hover:from-[#ea580c] hover:to-amber-600 text-white font-black text-xs uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
@@ -201,15 +209,27 @@ export function Navbar() {
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openQuoteModal();
-                }}
-                className="block w-full py-3.5 text-center text-xs font-black bg-gradient-to-r from-[#f97316] to-amber-500 text-white rounded-xl shadow-lg cursor-pointer"
-              >
-                ⚡ GET FREE SOLAR QUOTE
-              </button>
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openCallQueryModal();
+                  }}
+                  className="block w-full py-3 text-center text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-md cursor-pointer border border-slate-700"
+                >
+                  📞 REQUEST CALL QUERY
+                </button>
+
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openQuoteModal();
+                  }}
+                  className="block w-full py-3.5 text-center text-xs font-black bg-gradient-to-r from-[#f97316] to-amber-500 text-white rounded-xl shadow-lg cursor-pointer"
+                >
+                  ⚡ GET FREE SOLAR QUOTE
+                </button>
+              </div>
             </div>
           </div>
         </div>

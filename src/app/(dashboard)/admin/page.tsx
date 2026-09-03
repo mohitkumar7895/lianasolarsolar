@@ -31,6 +31,12 @@ import {
   Zap,
   TrendingUp,
   BookOpen,
+  PhoneCall,
+  MessageSquare,
+  Mail,
+  Eye,
+  Clock,
+  Inbox,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -186,15 +192,21 @@ export default function AdminPage() {
 
   const [editingLead, setEditingLead] = useState<LeadType | null>(null);
   const [showAddLead, setShowAddLead] = useState(false);
+  const [selectedLeadForView, setSelectedLeadForView] = useState<LeadType | null>(null);
+  const [leadSourceFilter, setLeadSourceFilter] = useState<'all' | 'call' | 'contact' | 'quote'>('all');
+  const [leadStatusFilter, setLeadStatusFilter] = useState<string>('all');
   const [leadForm, setLeadForm] = useState({
     name: '',
     phone: '',
     email: '',
     city: 'Delhi NCR',
     capacity: '5 kW',
-    type: 'Residential',
+    type: 'Call Query',
+    subject: 'Rooftop Solar Consultation',
+    message: '',
+    source: 'Call Query',
     bill: '600 units/mo',
-    status: 'New Lead',
+    status: 'New Call Query',
   });
 
   // Handle Photo File Uploads with Automatic HD WebP Compression
@@ -396,29 +408,35 @@ export default function AdminPage() {
 
     if (editingLead) {
       updateLead(editingLead.id, {
-        name: leadForm.name,
-        phone: leadForm.phone,
-        email: leadForm.email,
-        city: leadForm.city,
-        capacity: leadForm.capacity,
+        name: leadForm.name.trim(),
+        phone: leadForm.phone.trim(),
+        email: leadForm.email.trim(),
+        city: leadForm.city.trim(),
+        capacity: leadForm.capacity.trim(),
         type: leadForm.type,
-        bill: leadForm.bill,
+        subject: leadForm.subject.trim(),
+        message: leadForm.message.trim(),
+        source: leadForm.source,
+        bill: leadForm.bill.trim(),
         status: leadForm.status,
       });
-      showToast(`Updated lead for "${leadForm.name}"!`);
+      showToast(`Updated entry for "${leadForm.name}"!`);
       setEditingLead(null);
     } else {
       addLead({
-        name: leadForm.name,
-        phone: leadForm.phone,
-        email: leadForm.email,
-        city: leadForm.city,
-        capacity: leadForm.capacity,
+        name: leadForm.name.trim(),
+        phone: leadForm.phone.trim(),
+        email: leadForm.email.trim(),
+        city: leadForm.city.trim(),
+        capacity: leadForm.capacity.trim(),
         type: leadForm.type,
-        bill: leadForm.bill,
+        subject: leadForm.subject.trim(),
+        message: leadForm.message.trim(),
+        source: leadForm.source,
+        bill: leadForm.bill.trim(),
         status: leadForm.status,
       });
-      showToast(`Added new customer lead for "${leadForm.name}"!`);
+      showToast(`Added new query / lead for "${leadForm.name}"!`);
       setShowAddLead(false);
     }
     setLeadForm({
@@ -427,9 +445,12 @@ export default function AdminPage() {
       email: '',
       city: 'Delhi NCR',
       capacity: '5 kW',
-      type: 'Residential',
+      type: 'Call Query',
+      subject: 'Rooftop Solar Consultation',
+      message: '',
+      source: 'Call Query',
       bill: '600 units/mo',
-      status: 'New Lead',
+      status: 'New Call Query',
     });
   };
 
@@ -511,13 +532,51 @@ export default function AdminPage() {
       pr.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredLeads = leads.filter(
-    (l) =>
-      l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const callQueriesCount = leads.filter(
+    (l) => l.source === 'Call Query' || l.type === 'Call Query' || l.status?.toLowerCase().includes('call')
+  ).length;
+
+  const contactInquiriesCount = leads.filter(
+    (l) => l.source === 'Contact Form' || l.type === 'Contact Form' || l.type?.toLowerCase().includes('contact')
+  ).length;
+
+  const solarQuotesCount = leads.filter(
+    (l) => l.source === 'Solar Quote' || (!l.source && l.type !== 'Call Query' && l.type !== 'Contact Form')
+  ).length;
+
+  const filteredLeads = leads.filter((l) => {
+    // 1. Source filter
+    if (leadSourceFilter === 'call') {
+      const isCall = l.source === 'Call Query' || l.type === 'Call Query' || l.status?.toLowerCase().includes('call');
+      if (!isCall) return false;
+    } else if (leadSourceFilter === 'contact') {
+      const isContact = l.source === 'Contact Form' || l.type === 'Contact Form' || l.type?.toLowerCase().includes('contact');
+      if (!isContact) return false;
+    } else if (leadSourceFilter === 'quote') {
+      const isQuote = l.source === 'Solar Quote' || (!l.source && l.type !== 'Call Query' && l.type !== 'Contact Form');
+      if (!isQuote) return false;
+    }
+
+    // 2. Status filter
+    if (leadStatusFilter !== 'all' && l.status !== leadStatusFilter) {
+      return false;
+    }
+
+    // 3. Search query
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      l.name.toLowerCase().includes(q) ||
+      l.phone.toLowerCase().includes(q) ||
+      l.city.toLowerCase().includes(q) ||
+      (l.email && l.email.toLowerCase().includes(q)) ||
+      (l.subject && l.subject.toLowerCase().includes(q)) ||
+      (l.message && l.message.toLowerCase().includes(q)) ||
+      l.status.toLowerCase().includes(q) ||
+      l.type.toLowerCase().includes(q) ||
+      (l.source && l.source.toLowerCase().includes(q))
+    );
+  });
 
   // Unauthorized Barrier
   if (!authLoading && (!user || user.role !== 'admin')) {
@@ -2232,36 +2291,194 @@ export default function AdminPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 8: LEADS MANAGEMENT (EDIT STATUS + ADD + DELETE) */}
+        {/* TAB 8: CUSTOMER LEADS, CALL QUERIES & CONTACT INQUIRIES MANAGEMENT */}
         {/* ========================================================================= */}
         {activeTab === 'leads' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* TOP HEADER */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-base font-black text-white">Solar Inquiries & Customer Leads ({leads.length})</h2>
-                <p className="text-xs text-slate-400">Track and update status for solar quote requests.</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-black text-white">
+                    Customer Queries, Calls & Solar Leads ({leads.length})
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider">
+                    Live Syncing
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Real-time pipeline tracking for instant call requests, contact forms, and custom solar quotes.
+                </p>
               </div>
-              <Button
-                variant="solar"
-                size="sm"
-                onClick={() => {
-                  setEditingLead(null);
-                  setLeadForm({
-                    name: '',
-                    phone: '',
-                    email: '',
-                    city: 'Delhi NCR',
-                    capacity: '5 kW',
-                    type: 'Residential',
-                    bill: '600 units/mo',
-                    status: 'New Lead',
-                  });
-                  setShowAddLead(!showAddLead);
-                }}
-                className="gap-1.5 font-black text-xs cursor-pointer"
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="solar"
+                  size="sm"
+                  onClick={() => {
+                    setEditingLead(null);
+                    setLeadForm({
+                      name: '',
+                      phone: '',
+                      email: '',
+                      city: 'Delhi NCR',
+                      capacity: '5 kW (Residential Rooftop)',
+                      type: 'Call Query',
+                      subject: 'Rooftop Solar Consultation',
+                      message: '',
+                      source: 'Call Query',
+                      bill: '600 units/mo',
+                      status: 'New Call Query',
+                    });
+                    setShowAddLead(!showAddLead);
+                  }}
+                  className="gap-1.5 font-black text-xs cursor-pointer shadow-md"
+                >
+                  <Plus className="w-4 h-4" /> {showAddLead ? 'Cancel' : 'Add Manual Call / Query'}
+                </Button>
+              </div>
+            </div>
+
+            {/* QUICK STATS CARDS BAR */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div
+                onClick={() => setLeadSourceFilter('all')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  leadSourceFilter === 'all'
+                    ? 'bg-[#1f2937] border-orange-500/60 shadow-lg shadow-orange-950/40'
+                    : 'bg-[#161b22] border-slate-800 hover:border-slate-700'
+                }`}
               >
-                <Plus className="w-4 h-4" /> {showAddLead ? 'Cancel' : 'Add Manual Lead'}
-              </Button>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400">Total Inquiries</span>
+                  <div className="p-1.5 rounded-lg bg-orange-500/10 text-[#f97316]">
+                    <Users className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-2xl font-black text-white mt-1">{leads.length}</div>
+                <div className="text-[10px] text-slate-500 font-medium">All channels combined</div>
+              </div>
+
+              <div
+                onClick={() => setLeadSourceFilter('call')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  leadSourceFilter === 'call'
+                    ? 'bg-[#1f2937] border-orange-500/60 shadow-lg shadow-orange-950/40'
+                    : 'bg-[#161b22] border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400">📞 Call Queries</span>
+                  <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
+                    <PhoneCall className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-2xl font-black text-amber-400 mt-1">{callQueriesCount}</div>
+                <div className="text-[10px] text-slate-500 font-medium">Direct callback requests</div>
+              </div>
+
+              <div
+                onClick={() => setLeadSourceFilter('contact')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  leadSourceFilter === 'contact'
+                    ? 'bg-[#1f2937] border-orange-500/60 shadow-lg shadow-orange-950/40'
+                    : 'bg-[#161b22] border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400">📝 Contact Forms</span>
+                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-2xl font-black text-emerald-400 mt-1">{contactInquiriesCount}</div>
+                <div className="text-[10px] text-slate-500 font-medium">From /contact desk</div>
+              </div>
+
+              <div
+                onClick={() => setLeadSourceFilter('quote')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  leadSourceFilter === 'quote'
+                    ? 'bg-[#1f2937] border-orange-500/60 shadow-lg shadow-orange-950/40'
+                    : 'bg-[#161b22] border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-400">⚡ Solar Quotes</span>
+                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-2xl font-black text-blue-400 mt-1">{solarQuotesCount}</div>
+                <div className="text-[10px] text-slate-500 font-medium">Custom roof calculations</div>
+              </div>
+            </div>
+
+            {/* FILTER TABS & STATUS DROPDOWN */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-2xl bg-[#161b22] border border-slate-800">
+              {/* Channel Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <button
+                  onClick={() => setLeadSourceFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    leadSourceFilter === 'all'
+                      ? 'bg-[#f97316] text-white shadow-md'
+                      : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  All ({leads.length})
+                </button>
+                <button
+                  onClick={() => setLeadSourceFilter('call')}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    leadSourceFilter === 'call'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <PhoneCall className="w-3 h-3 text-amber-400" /> Call Queries ({callQueriesCount})
+                </button>
+                <button
+                  onClick={() => setLeadSourceFilter('contact')}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    leadSourceFilter === 'contact'
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <MessageSquare className="w-3 h-3 text-emerald-400" /> Contact Forms ({contactInquiriesCount})
+                </button>
+                <button
+                  onClick={() => setLeadSourceFilter('quote')}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    leadSourceFilter === 'quote'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <Zap className="w-3 h-3 text-blue-400" /> Quotes ({solarQuotesCount})
+                </button>
+              </div>
+
+              {/* Status Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-semibold whitespace-nowrap">Filter Status:</span>
+                <select
+                  value={leadStatusFilter}
+                  onChange={(e) => setLeadStatusFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-white focus:border-[#f97316] focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Pipeline Stages</option>
+                  <option value="New Call Query">📞 New Call Query</option>
+                  <option value="New Contact Inquiry">📝 New Contact Inquiry</option>
+                  <option value="New Lead">⚡ New Lead</option>
+                  <option value="Site Survey Scheduled">📅 Site Survey Scheduled</option>
+                  <option value="Subsidy Form Filled">📄 Subsidy Form Filled</option>
+                  <option value="Proposal Sent">💼 Proposal Sent</option>
+                  <option value="Installation In Progress">🛠️ Installation In Progress</option>
+                  <option value="Commissioned & Net Metered">🎉 Commissioned</option>
+                </select>
+              </div>
             </div>
 
             {/* ADD OR EDIT LEAD MODAL */}
@@ -2270,14 +2487,14 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <h3 className="text-sm font-black text-white flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-[#f97316]" />
-                    {editingLead ? `Edit Lead: ${editingLead.name}` : 'Add New Customer Lead'}
+                    {editingLead ? `Edit Inquiry / Lead: ${editingLead.name}` : 'Add Manual Call Query or Lead'}
                   </h3>
                   <button
                     onClick={() => {
                       setShowAddLead(false);
                       setEditingLead(null);
                     }}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white"
+                    className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -2286,63 +2503,83 @@ export default function AdminPage() {
                 <form onSubmit={handleSaveLead} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-black text-slate-300 uppercase">Customer Name</label>
+                      <label className="text-xs font-black text-slate-300 uppercase">Customer Name *</label>
                       <input
                         type="text"
                         required
                         value={leadForm.name}
                         onChange={(e) => setLeadForm((p) => ({ ...p, name: e.target.value }))}
-                        placeholder="Ramesh Sharma"
+                        placeholder="e.g. Ramesh Sharma"
                         className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-black text-slate-300 uppercase">Phone Number</label>
+                      <label className="text-xs font-black text-slate-300 uppercase">Mobile Number *</label>
                       <input
                         type="tel"
                         required
                         value={leadForm.phone}
                         onChange={(e) => setLeadForm((p) => ({ ...p, phone: e.target.value }))}
                         placeholder="+91 9876543210"
+                        className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-black text-slate-300 uppercase">Email Address</label>
+                      <input
+                        type="email"
+                        value={leadForm.email}
+                        onChange={(e) => setLeadForm((p) => ({ ...p, email: e.target.value }))}
+                        placeholder="customer@example.com"
                         className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-black text-slate-300 uppercase">Query Channel</label>
+                      <select
+                        value={leadForm.source}
+                        onChange={(e) =>
+                          setLeadForm((p) => ({
+                            ...p,
+                            source: e.target.value,
+                            type: e.target.value,
+                            status: e.target.value === 'Call Query' ? 'New Call Query' : p.status,
+                          }))
+                        }
+                        className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
+                      >
+                        <option value="Call Query">📞 Direct Call Query</option>
+                        <option value="Contact Form">📝 Contact Form</option>
+                        <option value="Solar Quote">⚡ Solar Quote Request</option>
+                        <option value="Manual Admin">👤 Manual Entry</option>
+                      </select>
+                    </div>
+
                     <div className="space-y-1">
                       <label className="text-xs font-black text-slate-300 uppercase">City / Location</label>
                       <input
                         type="text"
                         value={leadForm.city}
                         onChange={(e) => setLeadForm((p) => ({ ...p, city: e.target.value }))}
-                        placeholder="Noida, UP"
+                        placeholder="e.g. Noida, UP"
                         className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
                       />
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-black text-slate-300 uppercase">Capacity Required</label>
+                      <label className="text-xs font-black text-slate-300 uppercase">Plant / Requirement</label>
                       <input
                         type="text"
                         value={leadForm.capacity}
                         onChange={(e) => setLeadForm((p) => ({ ...p, capacity: e.target.value }))}
-                        placeholder="5 kW"
+                        placeholder="e.g. 5 kW Rooftop"
                         className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-black text-slate-300 uppercase">Property Type</label>
-                      <select
-                        value={leadForm.type}
-                        onChange={(e) => setLeadForm((p) => ({ ...p, type: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
-                      >
-                        <option value="Residential">Residential</option>
-                        <option value="Commercial">Commercial</option>
-                        <option value="Industrial">Industrial</option>
-                        <option value="Agricultural">Agricultural</option>
-                      </select>
-                    </div>
+
                     <div className="space-y-1">
                       <label className="text-xs font-black text-slate-300 uppercase">Pipeline Status</label>
                       <select
@@ -2350,14 +2587,40 @@ export default function AdminPage() {
                         onChange={(e) => setLeadForm((p) => ({ ...p, status: e.target.value }))}
                         className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
                       >
-                        <option value="New Lead">New Lead</option>
-                        <option value="Site Survey Scheduled">Site Survey Scheduled</option>
-                        <option value="Subsidy Form Filled">Subsidy Form Filled</option>
-                        <option value="Proposal Sent">Proposal Sent</option>
-                        <option value="Installation In Progress">Installation In Progress</option>
-                        <option value="Commissioned & Net Metered">Commissioned & Net Metered</option>
+                        <option value="New Call Query">📞 New Call Query</option>
+                        <option value="New Contact Inquiry">📝 New Contact Inquiry</option>
+                        <option value="New Lead">⚡ New Lead</option>
+                        <option value="Site Survey Scheduled">📅 Site Survey Scheduled</option>
+                        <option value="Subsidy Form Filled">📄 Subsidy Form Filled</option>
+                        <option value="Proposal Sent">💼 Proposal Sent</option>
+                        <option value="Installation In Progress">🛠️ Installation In Progress</option>
+                        <option value="Commissioned & Net Metered">🎉 Commissioned</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-300 uppercase">Subject / Requirement Heading</label>
+                    <input
+                      type="text"
+                      value={leadForm.subject}
+                      onChange={(e) => setLeadForm((p) => ({ ...p, subject: e.target.value }))}
+                      placeholder="e.g. Residential Rooftop Solar with Govt Subsidy"
+                      className="w-full px-3 py-2 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-300 uppercase">
+                      Customer Inquiry Message / Notes
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={leadForm.message}
+                      onChange={(e) => setLeadForm((p) => ({ ...p, message: e.target.value }))}
+                      placeholder="Customer message, rooftop terrace details, preferred timing, or internal notes..."
+                      className="w-full p-3 rounded-xl bg-[#0d1117] border border-slate-700 text-xs text-white focus:border-[#f97316] focus:outline-none"
+                    />
                   </div>
 
                   <div className="flex justify-end gap-2 pt-2">
@@ -2374,96 +2637,326 @@ export default function AdminPage() {
                       Cancel
                     </Button>
                     <Button type="submit" variant="solar" size="sm" className="font-black text-xs">
-                      {editingLead ? 'Save Lead' : 'Add Lead'}
+                      {editingLead ? 'Save Changes' : 'Add to Pipeline'}
                     </Button>
                   </div>
                 </form>
               </div>
             )}
 
-            {/* LEADS TABLE */}
-            <div className="rounded-3xl bg-[#161b22] border border-slate-800 overflow-hidden shadow-lg">
+            {/* DETAILS VIEW MODAL */}
+            {selectedLeadForView && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="relative w-full max-w-lg bg-[#161b22] rounded-3xl p-6 sm:p-7 border border-slate-700 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="p-2 rounded-xl bg-orange-500/10 text-[#f97316]">
+                        {selectedLeadForView.source === 'Call Query' || selectedLeadForView.type === 'Call Query' ? (
+                          <PhoneCall className="w-5 h-5" />
+                        ) : selectedLeadForView.source === 'Contact Form' || selectedLeadForView.type === 'Contact Form' ? (
+                          <MessageSquare className="w-5 h-5" />
+                        ) : (
+                          <Zap className="w-5 h-5" />
+                        )}
+                      </span>
+                      <div>
+                        <h3 className="text-base font-black text-white">{selectedLeadForView.name}</h3>
+                        <p className="text-[11px] text-slate-400 font-mono">
+                          {selectedLeadForView.id} • {selectedLeadForView.date}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedLeadForView(null)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Customer Quick Actions */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <a
+                      href={`tel:${selectedLeadForView.phone.replace(/\s+/g, '')}`}
+                      className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all"
+                    >
+                      <Phone className="w-3.5 h-3.5" /> Call Customer
+                    </a>
+                    <a
+                      href={`https://wa.me/${selectedLeadForView.phone.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 rounded-xl bg-[#22c55e] hover:bg-green-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
+                    </a>
+                    {selectedLeadForView.email && (
+                      <a
+                        href={`mailto:${selectedLeadForView.email}`}
+                        className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all col-span-2 sm:col-span-1"
+                      >
+                        <Mail className="w-3.5 h-3.5" /> Send Email
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Full Details Grid */}
+                  <div className="p-4 rounded-2xl bg-[#0d1117] border border-slate-800 space-y-3 text-xs">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Phone</span>
+                        <p className="font-bold text-white font-mono">{selectedLeadForView.phone}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Location</span>
+                        <p className="font-bold text-slate-200">{selectedLeadForView.city || 'Delhi NCR'}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Channel / Type</span>
+                        <p className="font-bold text-orange-400">{selectedLeadForView.source || selectedLeadForView.type}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Capacity / Sizing</span>
+                        <p className="font-bold text-amber-400">{selectedLeadForView.capacity || 'Not Specified'}</p>
+                      </div>
+                    </div>
+
+                    {selectedLeadForView.subject && (
+                      <div className="pt-2 border-t border-slate-800">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Subject / Requirement</span>
+                        <p className="font-bold text-slate-200 mt-0.5">{selectedLeadForView.subject}</p>
+                      </div>
+                    )}
+
+                    <div className="pt-2 border-t border-slate-800">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Full Message / Inquiry Note</span>
+                      <p className="text-slate-300 font-medium leading-relaxed mt-1 bg-slate-900/80 p-3 rounded-xl border border-slate-800 whitespace-pre-wrap">
+                        {selectedLeadForView.message || 'No additional message provided.'}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">Current Status</span>
+                      <select
+                        value={selectedLeadForView.status}
+                        onChange={(e) => {
+                          const newStatus = e.target.value;
+                          updateLeadStatus(selectedLeadForView.id, newStatus);
+                          setSelectedLeadForView({ ...selectedLeadForView, status: newStatus });
+                          showToast(`Status updated to "${newStatus}"`);
+                        }}
+                        className="px-2.5 py-1 rounded-lg text-xs font-black bg-slate-800 border border-slate-700 text-white cursor-pointer"
+                      >
+                        <option value="New Call Query">📞 New Call Query</option>
+                        <option value="New Contact Inquiry">📝 New Contact Inquiry</option>
+                        <option value="New Lead">⚡ New Lead</option>
+                        <option value="Site Survey Scheduled">📅 Site Survey Scheduled</option>
+                        <option value="Subsidy Form Filled">📄 Subsidy Form Filled</option>
+                        <option value="Proposal Sent">💼 Proposal Sent</option>
+                        <option value="Installation In Progress">🛠️ Installation In Progress</option>
+                        <option value="Commissioned & Net Metered">🎉 Commissioned</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedLeadForView(null)}
+                      className="text-xs"
+                    >
+                      Close Window
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LEADS & CALL QUERIES TABLE */}
+            <div className="rounded-3xl bg-[#161b22] border border-slate-800 overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#0d1117] text-slate-400 font-black uppercase tracking-wider border-b border-slate-800">
                     <tr>
-                      <th className="p-4">Customer</th>
-                      <th className="p-4">Phone / City</th>
-                      <th className="p-4">Plant Size</th>
-                      <th className="p-4">Status</th>
+                      <th className="p-4">Customer & Channel</th>
+                      <th className="p-4">Contact Info</th>
+                      <th className="p-4">Requirement / Sizing</th>
+                      <th className="p-4">Customer Message</th>
+                      <th className="p-4">Pipeline Status</th>
                       <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {filteredLeads.map((lead) => (
-                      <tr key={lead.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="p-4">
-                          <div className="font-bold text-white text-sm">{lead.name}</div>
-                          <div className="text-[11px] text-slate-500 font-mono">{lead.id} • {lead.type}</div>
-                        </td>
-                        <td className="p-4">
-                          <div className="font-semibold text-slate-300">{lead.phone}</div>
-                          <div className="text-[11px] text-slate-500">📍 {lead.city}</div>
-                        </td>
-                        <td className="p-4">
-                          <span className="px-2 py-1 rounded-lg bg-orange-500/10 text-[#f97316] font-black text-[11px] border border-orange-500/20">
-                            {lead.capacity || '5 kW'}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <select
-                            value={lead.status}
-                            onChange={(e) => updateLeadStatus(lead.id, e.target.value)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-black border cursor-pointer ${
-                              lead.status.includes('Commissioned') || lead.status.includes('Subsidy')
-                                ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
-                                : lead.status.includes('Survey') || lead.status.includes('Proposal')
-                                ? 'bg-blue-950/60 text-blue-300 border-blue-800'
-                                : 'bg-amber-950/60 text-amber-300 border-amber-800'
-                            }`}
-                          >
-                            <option value="New Lead">New Lead</option>
-                            <option value="Site Survey Scheduled">Site Survey Scheduled</option>
-                            <option value="Subsidy Form Filled">Subsidy Form Filled</option>
-                            <option value="Proposal Sent">Proposal Sent</option>
-                            <option value="Installation In Progress">Installation In Progress</option>
-                            <option value="Commissioned & Net Metered">Commissioned & Net Metered</option>
-                          </select>
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => {
-                                setEditingLead(lead);
-                                setLeadForm({
-                                  name: lead.name,
-                                  phone: lead.phone,
-                                  email: lead.email || '',
-                                  city: lead.city,
-                                  capacity: lead.capacity || '5 kW',
-                                  type: lead.type,
-                                  bill: lead.bill || '',
-                                  status: lead.status,
-                                });
-                              }}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-[#f97316] text-white transition-colors cursor-pointer"
-                              title="Edit Lead Details"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (confirm(`Delete lead for "${lead.name}"?`)) deleteLead(lead.id);
-                              }}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-600 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                              title="Delete Lead"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                    {filteredLeads.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-slate-500">
+                          <Inbox className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                          <p className="font-bold text-sm text-slate-400">No queries or leads found matching filters.</p>
+                          <p className="text-xs text-slate-600 mt-0.5">Try resetting search or filters.</p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredLeads.map((lead) => {
+                        const isCall =
+                          lead.source === 'Call Query' ||
+                          lead.type === 'Call Query' ||
+                          lead.status?.includes('Call');
+                        const isContact =
+                          lead.source === 'Contact Form' ||
+                          lead.type === 'Contact Form';
+
+                        return (
+                          <tr key={lead.id} className="hover:bg-slate-800/40 transition-colors group">
+                            {/* Customer & Channel */}
+                            <td className="p-4">
+                              <div className="font-bold text-white text-sm">{lead.name}</div>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                                    isCall
+                                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                      : isContact
+                                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                      : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                  }`}
+                                >
+                                  {isCall ? '📞 Call Query' : isContact ? '📝 Contact Form' : '⚡ Solar Quote'}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-mono">{lead.id}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-500 mt-0.5">{lead.date}</div>
+                            </td>
+
+                            {/* Contact Info */}
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-200 font-mono text-xs">{lead.phone}</span>
+                                <a
+                                  href={`tel:${lead.phone.replace(/\s+/g, '')}`}
+                                  className="p-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"
+                                  title="Call Customer"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                </a>
+                                <a
+                                  href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white transition-colors"
+                                  title="WhatsApp"
+                                >
+                                  <MessageSquare className="w-3 h-3" />
+                                </a>
+                              </div>
+                              <div className="text-[11px] text-slate-400 mt-0.5">📍 {lead.city || 'Delhi NCR'}</div>
+                              {lead.email && <div className="text-[10px] text-slate-500 truncate max-w-[140px]">{lead.email}</div>}
+                            </td>
+
+                            {/* Requirement / Sizing */}
+                            <td className="p-4">
+                              <div className="font-semibold text-white text-xs">
+                                {lead.capacity || lead.type || '5 kW'}
+                              </div>
+                              {lead.subject && (
+                                <div className="text-[11px] text-slate-400 truncate max-w-[180px]" title={lead.subject}>
+                                  {lead.subject}
+                                </div>
+                              )}
+                              {lead.bill && (
+                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">⚡ {lead.bill}</div>
+                              )}
+                            </td>
+
+                            {/* Customer Message */}
+                            <td className="p-4 max-w-[220px]">
+                              {lead.message ? (
+                                <div
+                                  onClick={() => setSelectedLeadForView(lead)}
+                                  className="text-[11px] text-slate-300 line-clamp-2 cursor-pointer hover:text-orange-400 transition-colors bg-slate-900/60 p-2 rounded-xl border border-slate-800"
+                                  title="Click to read full message"
+                                >
+                                  {lead.message}
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-slate-600 italic">No notes provided</span>
+                              )}
+                            </td>
+
+                            {/* Status */}
+                            <td className="p-4">
+                              <select
+                                value={lead.status}
+                                onChange={(e) => updateLeadStatus(lead.id, e.target.value)}
+                                className={`px-2.5 py-1.5 rounded-xl text-xs font-black border cursor-pointer ${
+                                  lead.status.includes('Commissioned') || lead.status.includes('Subsidy')
+                                    ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
+                                    : lead.status.includes('Survey') || lead.status.includes('Proposal')
+                                    ? 'bg-blue-950/60 text-blue-300 border-blue-800'
+                                    : lead.status.includes('Call')
+                                    ? 'bg-amber-950/60 text-amber-300 border-amber-800'
+                                    : 'bg-slate-900 text-slate-300 border-slate-700'
+                                }`}
+                              >
+                                <option value="New Call Query">📞 New Call Query</option>
+                                <option value="New Contact Inquiry">📝 New Contact Inquiry</option>
+                                <option value="New Lead">⚡ New Lead</option>
+                                <option value="Site Survey Scheduled">📅 Site Survey Scheduled</option>
+                                <option value="Subsidy Form Filled">📄 Subsidy Form Filled</option>
+                                <option value="Proposal Sent">💼 Proposal Sent</option>
+                                <option value="Installation In Progress">🛠️ Installation In Progress</option>
+                                <option value="Commissioned & Net Metered">🎉 Commissioned</option>
+                              </select>
+                            </td>
+
+                            {/* Actions */}
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => setSelectedLeadForView(lead)}
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                                  title="View Full Details"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingLead(lead);
+                                    setLeadForm({
+                                      name: lead.name,
+                                      phone: lead.phone,
+                                      email: lead.email || '',
+                                      city: lead.city,
+                                      capacity: lead.capacity || '5 kW',
+                                      type: lead.type,
+                                      subject: lead.subject || '',
+                                      message: lead.message || '',
+                                      source: lead.source || (isCall ? 'Call Query' : isContact ? 'Contact Form' : 'Solar Quote'),
+                                      bill: lead.bill || '',
+                                      status: lead.status,
+                                    });
+                                  }}
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-[#f97316] text-white transition-colors cursor-pointer"
+                                  title="Edit Entry"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Delete inquiry/lead for "${lead.name}"?`)) deleteLead(lead.id);
+                                  }}
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-600 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                                  title="Delete Lead"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>

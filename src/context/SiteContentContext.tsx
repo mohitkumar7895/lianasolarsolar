@@ -59,6 +59,9 @@ export interface LeadType {
   bill?: string;
   capacity?: string;
   type: string;
+  subject?: string;
+  message?: string;
+  source?: string;
   date: string;
   status: string;
 }
@@ -115,10 +118,66 @@ const DEFAULT_TRUST_IMAGES: TrustImageItem[] = [
 ];
 
 const DEFAULT_LEADS: LeadType[] = [
-  { id: 'LD-101', name: 'Ramesh Sharma', phone: '+91 91603 42240', email: 'ramesh@example.com', city: 'Noida', bill: '650 units/mo', capacity: '5 kW', type: 'Residential', date: 'Today, 10:30 AM', status: 'New Lead' },
-  { id: 'LD-102', name: 'Pooja Agarwal', phone: '+91 95500 01418', email: 'pooja@agri.com', city: 'Greater Noida', bill: '1,800 units/mo', capacity: '15 kW', type: 'Commercial', date: 'Today, 09:15 AM', status: 'Site Survey Scheduled' },
-  { id: 'LD-103', name: 'Sunil Verma', phone: '+91 99887 66554', email: 'sunil@gmail.com', city: 'Gurugram', bill: '380 units/mo', capacity: '3 kW', type: 'Residential', date: 'Yesterday', status: 'Subsidy Form Filled' },
-  { id: 'LD-104', name: 'Apex Polymers', phone: '+91 97766 55443', email: 'info@apexpoly.in', city: 'Faridabad', bill: '14,000 units/mo', capacity: '100 kW', type: 'Industrial', date: 'Yesterday', status: 'Proposal Sent' },
+  {
+    id: 'CQ-101',
+    name: 'Ramesh Sharma',
+    phone: '+91 91603 42240',
+    email: 'ramesh@example.com',
+    city: 'Noida, Sector 62',
+    bill: '650 units/mo',
+    capacity: '5 kW (Residential Rooftop)',
+    type: 'Call Query',
+    subject: 'Request Immediate Callback for 5kW Solar',
+    message: 'Need rooftop solar sizing and PM Surya Ghar subsidy details. Please call between 2 PM to 5 PM.',
+    source: 'Call Query',
+    date: 'Today, 10:30 AM',
+    status: 'New Call Query',
+  },
+  {
+    id: 'CONT-102',
+    name: 'Pooja Agarwal',
+    phone: '+91 95500 01418',
+    email: 'pooja@agri.com',
+    city: 'Greater Noida West',
+    bill: '1,800 units/mo',
+    capacity: '15 kW (Commercial Rooftop)',
+    type: 'Contact Form',
+    subject: 'Commercial Rooftop Solar',
+    message: 'We run a medical diagnostic lab. Interested in 15 kW grid-tied solar system with DG synchronization.',
+    source: 'Contact Form',
+    date: 'Today, 09:15 AM',
+    status: 'Site Survey Scheduled',
+  },
+  {
+    id: 'QT-103',
+    name: 'Sunil Verma',
+    phone: '+91 99887 66554',
+    email: 'sunil@gmail.com',
+    city: 'Gurugram, DLF Phase 2',
+    bill: '380 units/mo',
+    capacity: '3 kW',
+    type: 'Residential',
+    subject: 'Residential Rooftop Solar',
+    message: 'Want to zero out my electricity bills and apply for ₹78,000 subsidy under PM Surya Ghar Muft Bijli Yojana.',
+    source: 'Solar Quote',
+    date: 'Yesterday, 04:20 PM',
+    status: 'Subsidy Form Filled',
+  },
+  {
+    id: 'QT-104',
+    name: 'Apex Polymers Ltd.',
+    phone: '+91 97766 55443',
+    email: 'info@apexpoly.in',
+    city: 'Faridabad Industrial Area',
+    bill: '14,000 units/mo',
+    capacity: '100 kW',
+    type: 'Industrial',
+    subject: 'Industrial Solar Plant',
+    message: 'Looking for 100 kW captive metal shed installation with accelerated depreciation benefits.',
+    source: 'Solar Quote',
+    date: 'Yesterday, 11:00 AM',
+    status: 'Proposal Sent',
+  },
 ];
 
 const DEFAULT_CONFIG: SiteConfigType = {
@@ -474,14 +533,22 @@ export function SiteContentProvider({ children }: { children: React.ReactNode })
     });
   }, []);
 
-  const addLead = useCallback((leadData: Omit<LeadType, 'id' | 'date'>) => {
+  const addLead = useCallback((leadData: Omit<LeadType, 'id' | 'date'> & { id?: string; date?: string }) => {
+    const prefix =
+      leadData.source === 'Call Query' || leadData.type === 'Call Query'
+        ? 'CQ'
+        : leadData.source === 'Contact Form' || leadData.type === 'Contact Form'
+        ? 'CONT'
+        : 'QT';
     const newLead: LeadType = {
       ...leadData,
-      id: `LD-${Math.floor(1000 + Math.random() * 9000)}`,
-      date: 'Just now',
+      id: leadData.id || `${prefix}-${Math.floor(100 + Math.random() * 900)}`,
+      date: leadData.date || 'Just now',
     };
     setLeads((prev) => {
-      const updated = [newLead, ...prev];
+      // Remove any existing duplicate by ID if updating, or prepend
+      const filtered = prev.filter((item) => item.id !== newLead.id);
+      const updated = [newLead, ...filtered];
       setStorageItem(STORAGE_KEY_LEADS, updated);
       saveToMySQL('leads', updated);
       return updated;

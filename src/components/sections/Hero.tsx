@@ -102,11 +102,11 @@ export function Hero() {
             {config.heroSubhead || 'Rooftop solar from ₹0 down — claim up to ₹78,000 subsidy'}
           </p>
 
-          {/* Orange Explore Solar Button opening Modal */}
+          {/* Orange Explore Solar Button opening Modal with Luxury Shimmer */}
           <div className="pt-2">
             <button
               onClick={openQuoteModal}
-              className="px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-[#f97316] hover:bg-[#ea580c] text-white font-black text-sm sm:text-base flex items-center gap-2.5 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-orange-950/80"
+              className="animate-shimmer px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-[#f97316] hover:bg-[#ea580c] text-white font-black text-sm sm:text-base flex items-center gap-2.5 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-orange-950/80"
             >
               <Zap className="w-4 h-4 fill-white text-white" /> Explore Solar Quote
             </button>
