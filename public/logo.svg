@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Radiant Solar Gold to Crimson Gradient -->
+    <linearGradient id="sunFlareGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="25%" stop-color="#f59e0b" />
+      <stop offset="65%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+
+    <!-- Eco Green Energy Ribbon Gradient (Liana nature concept) -->
+    <linearGradient id="lianaGreenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <!-- Deep Tech Navy Gradient -->
+    <linearGradient id="techNavy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Glowing Sun Disc Gradient -->
+    <radialGradient id="radiantSunCore" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="40%" stop-color="#fbbf24" />
+      <stop offset="80%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </radialGradient>
+
+    <!-- Drop Shadow Filter for 3D Layering -->
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background Soft Radial Sunburst -->
+  <circle cx="250" cy="250" r="215" fill="#f97316" opacity="0.06" />
+
+  <!-- 1. The Rising Sun Sphere -->
+  <circle cx="310" cy="180" r="85" fill="url(#radiantSunCore)" filter="url(#softShadow)" />
+
+  <!-- 2. The Solar Ray Crown (Dynamic curved energy rays above the sun) -->
+  <path d="M310,55 C335,55 355,65 375,80 C365,95 350,105 330,105 C315,95 310,75 310,55 Z" fill="url(#sunFlareGrad)" opacity="0.9" />
+  <path d="M405,115 C425,135 435,160 440,185 C420,185 405,175 395,155 C395,135 400,125 405,115 Z" fill="url(#sunFlareGrad)" opacity="0.85" />
+  <path d="M430,220 C435,245 430,270 415,295 C405,280 405,260 410,240 C415,225 425,220 430,220 Z" fill="url(#sunFlareGrad)" opacity="0.8" />
+
+  <!-- 3. The Iconic "L" Ribbon (Sweeping upward like a solar wing & wrapping the sun) -->
+  <!-- Main Vertical & Curve of 'L' -->
+  <path d="M120,80 C150,80 185,105 185,150 L185,320 C185,385 240,410 320,410 C370,410 410,390 430,370 C410,425 350,455 270,455 C165,455 120,385 120,290 L120,80 Z" 
+        fill="url(#sunFlareGrad)" 
+        filter="url(#softShadow)" />
+
+  <!-- 4. The "Liana" Eco-Leaf Energy Swoosh (Represents Nature + Vitality + 'S' wave) -->
+  <path d="M120,290 C120,380 175,445 285,445 C370,445 420,400 445,350 C410,380 360,400 290,400 C210,400 170,350 170,280 C170,220 205,170 250,140 C210,165 175,205 155,255 C135,245 125,215 120,180 L120,290 Z" 
+        fill="url(#lianaGreenGrad)" 
+        opacity="0.95" />
+
+  <!-- 5. Solar Panel Grid Precision Lines etched onto the 'L' Base -->
+  <line x1="220" y1="365" x2="250" y2="435" stroke="#ffffff" stroke-width="3.5" opacity="0.6" stroke-linecap="round" />
+  <line x1="280" y1="365" x2="310" y2="435" stroke="#ffffff" stroke-width="3.5" opacity="0.6" stroke-linecap="round" />
+  <line x1="340" y1="365" x2="370" y2="425" stroke="#ffffff" stroke-width="3.5" opacity="0.6" stroke-linecap="round" />
+
+  <!-- 6. Modern Sparkling Energy Star Accent -->
+  <path d="M310,180 L316,160 L322,180 L342,186 L322,192 L316,212 L310,192 L290,186 Z" fill="#ffffff" filter="url(#softShadow)" />
+  <circle cx="316" cy="186" r="3" fill="#fbbf24" />
+</svg>

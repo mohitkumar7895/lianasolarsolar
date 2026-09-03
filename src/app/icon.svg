@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="iconSunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="30%" stop-color="#f59e0b" />
+      <stop offset="70%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+    <linearGradient id="iconGreenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+    <radialGradient id="iconSunCore" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="50%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f97316" />
+    </radialGradient>
+  </defs>
+
+  <!-- Sun Disc -->
+  <circle cx="62" cy="38" r="18" fill="url(#iconSunCore)" />
+
+  <!-- Iconic 'L' Solar Arm -->
+  <path d="M24,16 C30,16 38,21 38,30 L38,64 C38,77 49,83 65,83 C75,83 83,79 87,75 C83,86 71,92 55,92 C34,92 24,78 24,59 L24,16 Z" 
+        fill="url(#iconSunGrad)" />
+
+  <!-- Nature Eco Curve -->
+  <path d="M24,59 C24,77 35,90 57,90 C74,90 84,81 89,71 C82,77 72,81 58,81 C42,81 34,71 34,57 C34,45 41,35 50,29 C42,34 35,42 31,52 L24,59 Z" 
+        fill="url(#iconGreenGrad)" />
+
+  <!-- Sparkle Star -->
+  <polygon points="63,38 65,33 67,38 72,40 67,42 65,47 63,42 58,40" fill="#ffffff" />
+</svg>
