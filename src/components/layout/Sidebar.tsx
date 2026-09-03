@@ -8,7 +8,11 @@ import { cn } from '@/lib/utils';
 import { Logo } from '@/components/common/Logo';
 import { useAuth } from '@/context/AuthContext';
 
-export function Sidebar() {
+interface SidebarProps {
+  role?: string;
+}
+
+export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
